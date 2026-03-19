@@ -18,13 +18,19 @@ const dbConfig = {
 const pool = mysql.createPool(dbConfig);
 
 // Helper to check connection but not crash
+console.log(`Attempting to connect to DB at ${dbConfig.host}:${dbConfig.port}...`);
 pool.getConnection()
   .then(conn => {
-    console.log('Database connected successfully');
+    console.log('✅ Database connected successfully');
     conn.release();
   })
   .catch(err => {
-    console.error('Database connection failed:', err.message);
+    console.error('❌ Database connection failed!');
+    console.error('Error Code:', err.code);
+    console.error('Error Message:', err.message);
+    if (err.code === 'ETIMEDOUT') {
+      console.error('DEBUG: This usually means the Aiven Firewall (IP Allowlist) is blocking Vercel.');
+    }
   });
 
 module.exports = pool;
