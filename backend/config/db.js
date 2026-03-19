@@ -1,3 +1,6 @@
+const mysql = require('mysql2/promise');
+require('dotenv').config();
+
 const poolConfig = process.env.DATABASE_URL 
   ? { uri: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }
   : {
