@@ -25,16 +25,65 @@ app.get('/api/health', async (req, res) => {
   try {
     const pool = require('./config/db');
     const [rows] = await pool.execute('SELECT 1 as connected');
+    
+    // Check if tables exist
     const [tables] = await pool.execute('SHOW TABLES');
     res.json({ 
       status: 'ok', 
-      database: rows[0].connected === 1 ? 'connected' : 'error',
-      found_tables: tables.map(t => Object.values(t)[0])
+      database: 'connected', 
+      tables: tables.length,
+      details: rows[0].connected === 1 ? 'ready' : 'error' 
     });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }
 });
+
+// Auto-initialize tables (Crucial for 100% working app on Vercel)
+const initDb = async () => {
+  const pool = require('./config/db');
+  console.log('Checking database tables...');
+  try {
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role ENUM('student', 'admin') DEFAULT 'student',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS refresh_tokens (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        token TEXT NOT NULL,
+        expires_at DATETIME NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Add subjects table for dashboard
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS subjects (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        thumbnail VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    console.log('Database tables verified/created.');
+  } catch (err) {
+    console.error('Auto-init failed:', err.message);
+  }
+};
+
+// Run init in background (don't block server start)
+initDb();
 
 // Routes - flexible for both /api/ and direct paths (common for Vercel/proxying)
 app.use(['/api/auth', '/auth'], require('./routes/auth'));
