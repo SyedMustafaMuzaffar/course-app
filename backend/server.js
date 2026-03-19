@@ -25,7 +25,12 @@ app.get('/api/health', async (req, res) => {
   try {
     const pool = require('./config/db');
     const [rows] = await pool.execute('SELECT 1 as connected');
-    res.json({ status: 'ok', database: rows[0].connected === 1 ? 'connected' : 'error' });
+    const [tables] = await pool.execute('SHOW TABLES');
+    res.json({ 
+      status: 'ok', 
+      database: rows[0].connected === 1 ? 'connected' : 'error',
+      found_tables: tables.map(t => Object.values(t)[0])
+    });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }
