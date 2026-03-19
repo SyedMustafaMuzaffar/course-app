@@ -14,6 +14,17 @@ app.get('/', (req, res) => {
   res.send('LMS API is running...');
 });
 
+// Health check to debug DB on Vercel
+app.get('/api/health', async (req, res) => {
+  try {
+    const pool = require('./config/db');
+    const [rows] = await pool.execute('SELECT 1 as connected');
+    res.json({ status: 'ok', database: rows[0].connected === 1 ? 'connected' : 'error' });
+  } catch (err) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/subjects', require('./routes/subjects'));
