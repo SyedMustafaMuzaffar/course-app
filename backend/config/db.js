@@ -7,10 +7,11 @@ const dbConfig = {
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'lms_db',
   waitForConnections: true,
-  connectionLimit: 5, // Reduced for serverless
+  connectionLimit: 10,
   queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 0
+  ssl: {
+    rejectUnauthorized: false
+  }
 };
 
 const pool = mysql.createPool(dbConfig);
