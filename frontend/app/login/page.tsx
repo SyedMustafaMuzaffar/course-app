@@ -23,7 +23,8 @@ export default function LoginPage() {
       const { data } = await api.post('/auth/login', { email, password });
       login(data.accessToken, data.refreshToken, data.user);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      const serverError = err.response?.data?.error || err.response?.data?.message || err.message;
+      setError(`Error: ${serverError}`);
     } finally {
       setIsLoading(false);
     }
