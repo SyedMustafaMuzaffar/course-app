@@ -31,14 +31,25 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/subjects', require('./routes/subjects'));
-app.use('/api/sections', require('./routes/sections'));
-app.use('/api/videos', require('./routes/videos'));
-app.use('/api/enrollments', require('./routes/enrollments'));
-app.use('/api/progress', require('./routes/progress'));
-app.use('/api/ai', require('./routes/ai'));
+// Routes - flexible for both /api/ and direct paths (common for Vercel/proxying)
+app.use(['/api/auth', '/auth'], require('./routes/auth'));
+app.use(['/api/subjects', '/subjects'], require('./routes/subjects'));
+app.use(['/api/sections', '/sections'], require('./routes/sections'));
+app.use(['/api/videos', '/videos'], require('./routes/videos'));
+app.use(['/api/enrollments', '/enrollments'], require('./routes/enrollments'));
+app.use(['/api/progress', '/progress'], require('./routes/progress'));
+app.use(['/api/ai', '/ai'], require('./routes/ai'));
+
+// Final catch-all for debugging 404s on Vercel
+app.use((req, res) => {
+  console.log(`404: ${req.method} ${req.path}`);
+  res.status(404).json({ 
+    message: 'Route not found', 
+    path: req.path, 
+    method: req.method,
+    tip: 'Check your vercel.json rewrites or API base URL'
+  });
+});
 
 
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
