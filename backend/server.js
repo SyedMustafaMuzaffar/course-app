@@ -20,10 +20,16 @@ app.get('/', (req, res) => {
   res.send('LMS API is running...');
 });
 
-// Health check to debug DB on Vercel
+// Health check and One-Click DB Init
 app.get('/api/health', async (req, res) => {
   try {
     const pool = require('./config/db');
+    
+    // Check if user wants to force initialize tables
+    if (req.query.init === 'true') {
+      await initDb();
+    }
+
     const [rows] = await pool.execute('SELECT 1 as connected');
     
     // Check if tables exist
@@ -31,7 +37,8 @@ app.get('/api/health', async (req, res) => {
     res.json({ 
       status: 'ok', 
       database: 'connected', 
-      tables: tables.length,
+      tables_count: tables.length,
+      init_url: '/api/health?init=true',
       details: rows[0].connected === 1 ? 'ready' : 'error' 
     });
   } catch (err) {
