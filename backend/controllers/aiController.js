@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+
 
 const chat = async (req, res) => {
   const { message, history } = req.body;
@@ -22,17 +22,28 @@ const chat = async (req, res) => {
       return res.json({ response: getMockResponse(message) });
     }
 
-    // Using Hugging Face Inference API via the recommended router
+    // Using Hugging Face OpenAI-compatible router
     const response = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
+      "https://router.huggingface.co/v1/chat/completions",
       {
-        headers: { Authorization: `Bearer ${hfToken}`, "Content-Type": "application/json" },
+        headers: { 
+          "Authorization": `Bearer ${hfToken}`, 
+          "Content-Type": "application/json" 
+        },
         method: "POST",
         body: JSON.stringify({
-          inputs: `[INST] You are a helpful AI assistant for an LMS (Learning Management System). 
-          Keep your responses concise and helpful for students. 
-          User asks: ${message} [/INST]`,
-          parameters: { max_new_tokens: 500, return_full_text: false }
+          model: "Qwen/Qwen2.5-7B-Instruct",
+          messages: [
+            {
+              role: "system",
+              content: "You are a helpful AI assistant for an LMS (Learning Management System). Keep your responses concise and helpful for students."
+            },
+            {
+              role: "user",
+              content: message
+            }
+          ],
+          max_tokens: 500
         }),
       }
     );
@@ -41,10 +52,10 @@ const chat = async (req, res) => {
     
     if (result.error) {
       console.error("HF API Error Response:", result);
-      throw new Error(result.error);
+      throw new Error(result.error.message || result.error);
     }
 
-    const aiResponse = result[0]?.generated_text || getMockResponse(message);
+    const aiResponse = result.choices?.[0]?.message?.content || getMockResponse(message);
     res.json({ response: aiResponse.trim() });
 
   } catch (error) {
