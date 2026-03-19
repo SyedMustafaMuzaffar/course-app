@@ -9,6 +9,12 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Log all requests for debugging Vercel routing
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
+
 // Basic Route
 app.get('/', (req, res) => {
   res.send('LMS API is running...');
