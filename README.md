@@ -1,55 +1,33 @@
-# Modern Learning Management System (LMS)
+# LMS Course Platform - 100% Deployment Ready
 
-A production-ready full-stack Learning Management System built with **Next.js 14**, **Tailwind CSS**, **Node.js**, **Express**, and **MySQL**.
+This is a full-stack LMS application with a Next.js frontend and Node.js/Express backend, optimized for Vercel deployment and Hugging Face AI integration.
 
-## Features
+## 🚀 One-Click Vercel Deployment
 
-- **Authentication System**: Secure JWT-based auth with refresh token rotation. Role-based access (Admin, Student).
-- **Course Catalog & Enrollment**: Students can browse available courses and enroll instantly.
-- **Video Learning Interface**: YouTube embedded videos, lesson progress tracking, sequential unlocking, auto-resume from last timestamp.
-- **Admin Dashboard**: Comprehensive course management.
-- **Content Management**: Drag-and-drop video reordering to perfectly arrange sections and curriculums.
+1. **Import to Vercel**: Connect your GitHub repository.
+2. **Important**: Set the **Root Directory** to the base folder (it contains `vercel.json` and `package.json`).
+3. **Environment Variables**: You MUST add the following in the Vercel Dashboard:
+   - `HUGGINGFACE_API_KEY`: (Your Hugging Face Token)
+   - `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: (From your hosted MySQL DB)
+   - `NEXT_PUBLIC_API_URL`: `/api`
+   - `JWT_SECRET`: (Any random secure string)
+   - `JWT_REFRESH_SECRET`: (Any random secure string)
 
-## Prerequisites
-- Node.js (v18+)
-- MySQL Base
+## 🗄️ Database Setup (To fix "Server Error")
 
-## Getting Started
+Since Vercel cannot connect to your local computer, you must:
+1. Use a cloud database (like [Aiven](https://aiven.io/), [Railway](https://railway.app/), or [PlanetScale](https://planetscale.com/)).
+2. Log in to your cloud database's SQL console.
+3. Copy and run the code from `backend/schema.sql`.
 
-### 1. Database Setup
-1. Open MySQL and execute the `backend/schema.sql` file to create the tables.
-2. Execute the `backend/seed.sql` file to populate demo data (including Admin and Student accounts).
+## 🤖 AI Assistant
 
-### 2. Backend Setup
-1. Navigate to the backend directory: `cd backend`
-2. Update the `.env` file with your MySQL credentials:
-   ```env
-   DB_HOST=localhost
-   DB_USER=your_mysql_user
-   DB_PASSWORD=your_mysql_password
-   DB_NAME=lms_db
-   ```
-3. Run the development server: `npm run dev` (Runs on `http://localhost:5000`)
+- The AI assistant is integrated with the latest Hugging Face router API.
+- We are using the `Qwen/Qwen2.5-7B-Instruct` model for high-quality responses.
+- If you see "Lite Mode", it means your `HUGGINGFACE_API_KEY` is missing in Vercel.
 
-### 3. Frontend Setup
-1. Navigate to the frontend directory: `cd frontend`
-2. Change the API URL if needed by creating a `.env.local` file:
-   ```env
-   NEXT_PUBLIC_API_URL=http://localhost:5000/api
-   ```
-3. Start the application: `npm run dev` (Runs on `http://localhost:3000`)
+## 🛠️ Local Development
 
-## Test Accounts
-You can log in with the seeded accounts:
-
-**Admin:**
-- Email: `admin@example.com`
-- Password: `password123`
-
-**Student:**
-- Email: `student@example.com`
-- Password: `password123`
-
-## Tech Stack
-- **Frontend**: Next.js App Router, React, Tailwind CSS, Axios, @hello-pangea/dnd (Drag and drop)
-- **Backend**: Node.js, Express, MySQL2, JSONWebToken, Bcrypt
+1. Run `npm install` in the root.
+2. Create `.env` files in `frontend/` and `backend/`.
+3. Start both: `npm run dev` from the root.
