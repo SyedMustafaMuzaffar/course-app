@@ -143,6 +143,23 @@ const initDb = async () => {
     }
 
     console.log('--- CONTENT SEEDING COMPLETE ---');
+
+    // 8. Create Video Progress Table
+    console.log('Creating video_progress table...');
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS video_progress (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        video_id INT NOT NULL,
+        watched_seconds INT DEFAULT 0,
+        completed BOOLEAN DEFAULT FALSE,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (video_id) REFERENCES videos(id) ON DELETE CASCADE,
+        UNIQUE KEY user_video (user_id, video_id)
+      )
+    `);
+
     return true;
   } catch (err) {
     console.error('--- DATABASE INITIALIZATION FAILED ---');
