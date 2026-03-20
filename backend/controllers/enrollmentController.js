@@ -35,8 +35,21 @@ const enrollStudent = async (req, res) => {
     const id = await EnrollmentModel.enroll(req.user.id, subject_id);
     res.status(201).json({ message: 'Enrolled successfully', id });
   } catch (error) {
+    console.error('CRITICAL ENROLLMENT ERROR:', {
+      userId: req.user.id,
+      subjectId: subject_id,
+      error: error.message,
+      code: error.code
+    });
+
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ message: 'Already enrolled' });
+    }
+    if (error.code === 'ER_NO_REFERENCED_ROW_2' || error.code === 'ER_NO_REFERENCED_ROW') {
+      return res.status(400).json({ 
+        message: 'This course entry is outdated. Please refresh your course catalog and try again.',
+        error: 'STALE_ID'
+      });
     }
     res.status(500).json({ message: 'Server error', error: error.message });
   }
