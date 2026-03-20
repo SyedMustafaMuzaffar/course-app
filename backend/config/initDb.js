@@ -28,22 +28,32 @@ const initDb = async () => {
       )
     `);
     
-    // 3. Create Subjects
-    console.log('Ensuring subjects table exists...');
+    // 3. Create/Update Subjects Table
+    console.log('Ensuring subjects table has correct schema...');
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS subjects (
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
         description TEXT,
         thumbnail_url VARCHAR(255),
-        price DECIMAL(10, 2) DEFAULT 0,
-        duration_hours INT DEFAULT 0,
-        level ENUM('Beginner', 'Intermediate', 'Advanced') DEFAULT 'Beginner',
-        students_count INT DEFAULT 0,
-        rating DECIMAL(3, 1) DEFAULT 4.5,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Surgical updates for missing columns
+    const [cols] = await pool.execute('DESCRIBE subjects');
+    const colNames = cols.map(c => c.Field);
+    
+    if (!colNames.includes('price')) await pool.execute('ALTER TABLE subjects ADD COLUMN price DECIMAL(10, 2) DEFAULT 0');
+    if (!colNames.includes('duration_hours')) await pool.execute('ALTER TABLE subjects ADD COLUMN duration_hours INT DEFAULT 0');
+    if (!colNames.includes('level')) await pool.execute("ALTER TABLE subjects ADD COLUMN level ENUM('Beginner', 'Intermediate', 'Advanced') DEFAULT 'Beginner'");
+    if (!colNames.includes('students_count')) await pool.execute('ALTER TABLE subjects ADD COLUMN students_count INT DEFAULT 0');
+    if (!colNames.includes('rating')) await pool.execute('ALTER TABLE subjects ADD COLUMN rating DECIMAL(3, 1) DEFAULT 4.5');
+    if (!colNames.includes('thumbnail_url') && colNames.includes('thumbnail')) {
+       await pool.execute('ALTER TABLE subjects CHANGE thumbnail thumbnail_url VARCHAR(255)');
+    }
+
+    console.log('--- DATABASE SCHEMA SURGICALLY UPDATED ---');
 
     console.log('--- DATABASE SCHEMA UPDATED ---');
 
