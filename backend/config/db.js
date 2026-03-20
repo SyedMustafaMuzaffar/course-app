@@ -1,9 +1,25 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-const poolConfig = process.env.DATABASE_URL 
-  ? { uri: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }
-  : {
+let pool;
+if (process.env.DATABASE_URL) {
+  // Use connection string but force SSL options
+  const url = new URL(process.env.DATABASE_URL);
+  pool = mysql.createPool({
+    host: url.hostname,
+    port: url.port,
+    user: url.username,
+    password: decodeURIComponent(url.password),
+    database: url.pathname.substring(1),
+    ssl: {
+      rejectUnauthorized: false
+    },
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+  });
+} else {
+  const poolConfig = {
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT) || 3306,
       user: process.env.DB_USER || 'root',
@@ -16,8 +32,8 @@ const poolConfig = process.env.DATABASE_URL
         rejectUnauthorized: false
       }
     };
-
-const pool = mysql.createPool(poolConfig);
+  pool = mysql.createPool(poolConfig);
+}
 
 // Helper to check connection but not crash
 if (process.env.DATABASE_URL) {
