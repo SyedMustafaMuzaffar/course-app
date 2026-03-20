@@ -27,6 +27,9 @@ app.get('/api/health', async (req, res) => {
     
     // Check if user wants to force initialize tables
     if (req.query.init === 'true') {
+      await initDb();
+    }
+
     const [tables] = await pool.execute('SHOW TABLES');
     const [subjectsCols] = await pool.execute('DESCRIBE subjects').catch(() => [[]]);
     const [subjectsCount] = await pool.execute('SELECT COUNT(*) as count FROM subjects').catch(() => [[{count: 0}]]);
