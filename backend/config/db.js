@@ -2,9 +2,11 @@ const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 let pool;
-if (process.env.DATABASE_URL) {
+const dbUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL.trim() : null;
+
+if (dbUrl) {
   // Use connection string but force SSL options
-  const url = new URL(process.env.DATABASE_URL);
+  const url = new URL(dbUrl);
   pool = mysql.createPool({
     host: url.hostname,
     port: url.port,
@@ -16,32 +18,30 @@ if (process.env.DATABASE_URL) {
       minVersion: 'TLSv1.2'
     },
     waitForConnections: true,
-    connectionLimit: 5, // Lower for serverless to reduce connect overhead
+    connectionLimit: 5,
     queueLimit: 0,
-    connectTimeout: 30000,
+    connectTimeout: 60000, // 60 seconds
     enableKeepAlive: true,
-    keepAliveInitialDelay: 10000
+    keepAliveInitialDelay: 10000,
+    family: 4 // Force IPv4
   });
 } else {
   const poolConfig = {
-      host: process.env.DB_HOST || 'localhost',
+      host: (process.env.DB_HOST || 'localhost').trim(),
       port: parseInt(process.env.DB_PORT) || 3306,
-      user: process.env.DB_USER || 'root',
+      user: (process.env.DB_USER || 'root').trim(),
       password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'lms_db',
+      database: (process.env.DB_NAME || 'lms_db').trim(),
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
       ssl: {
         rejectUnauthorized: false
-      }
+      },
+      connectTimeout: 60000,
+      family: 4 // Force IPv4
     };
-  pool = mysql.createPool({
-    ...poolConfig,
-    connectTimeout: 30000,
-    enableKeepAlive: true,
-    keepAliveInitialDelay: 10000
-  });
+  pool = mysql.createPool(poolConfig);
 }
 
 // Helper to check connection but not crash
