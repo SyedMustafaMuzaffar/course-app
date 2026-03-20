@@ -27,6 +27,10 @@ function PaymentModal({
   const [wallet, setWallet] = useState('paytm');
   const [step, setStep] = useState<'pay' | 'success'>('pay');
 
+  const handlePay = async () => {
+    setProcessing(true);
+    // Simulate payment processing
+    await new Promise((r) => setTimeout(r, 1800));
     try {
       const response = await api.post('/enrollments/enroll', { subject_id: subject.id });
       console.log('Enrollment response:', response.data);
@@ -37,6 +41,7 @@ function PaymentModal({
       setProcessing(false);
       alert('Enrollment failed: ' + (err?.response?.data?.message || 'Please log out and log in again to sync your account.'));
     }
+  };
 
   const methodTab = (id: typeof method, label: string, icon: string) => (
     <button
