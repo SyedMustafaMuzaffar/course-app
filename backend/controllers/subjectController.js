@@ -2,7 +2,16 @@ const SubjectModel = require('../models/subjectModel');
 
 const getAllSubjects = async (req, res) => {
   try {
-    const subjects = await SubjectModel.getAll();
+    let subjects = await SubjectModel.getAll();
+    
+    // If no subjects found, try a blocking initialization
+    if (subjects.length === 0) {
+      console.log('No subjects found. Running blocking initialization...');
+      const initDb = require('../config/initDb');
+      await initDb();
+      subjects = await SubjectModel.getAll();
+    }
+    
     res.json(subjects);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
