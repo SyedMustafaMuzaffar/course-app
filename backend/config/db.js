@@ -12,11 +12,15 @@ if (process.env.DATABASE_URL) {
     password: decodeURIComponent(url.password),
     database: url.pathname.substring(1),
     ssl: {
-      rejectUnauthorized: false
+      rejectUnauthorized: false,
+      minVersion: 'TLSv1.2'
     },
     waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+    connectionLimit: 5, // Lower for serverless to reduce connect overhead
+    queueLimit: 0,
+    connectTimeout: 30000,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000
   });
 } else {
   const poolConfig = {
@@ -32,7 +36,12 @@ if (process.env.DATABASE_URL) {
         rejectUnauthorized: false
       }
     };
-  pool = mysql.createPool(poolConfig);
+  pool = mysql.createPool({
+    ...poolConfig,
+    connectTimeout: 30000,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000
+  });
 }
 
 // Helper to check connection but not crash
