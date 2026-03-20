@@ -8,7 +8,20 @@ class SubjectModel {
 
   static async getById(id) {
     const [rows] = await pool.execute('SELECT * FROM subjects WHERE id = ?', [id]);
-    return rows[0];
+    if (rows.length === 0) return null;
+    const subject = rows[0];
+
+    // Fetch Sections
+    const [sections] = await pool.execute('SELECT * FROM sections WHERE subject_id = ? ORDER BY order_index ASC', [id]);
+    
+    // Fetch Videos for each section
+    for (let i = 0; i < sections.length; i++) {
+      const [videos] = await pool.execute('SELECT * FROM videos WHERE section_id = ? ORDER BY order_index ASC', [sections[i].id]);
+      sections[i].videos = videos;
+    }
+
+    subject.sections = sections;
+    return subject;
   }
 
   static async create(title, description, thumbnail_url) {
