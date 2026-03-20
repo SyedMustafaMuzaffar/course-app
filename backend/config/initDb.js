@@ -144,7 +144,21 @@ const initDb = async () => {
 
     console.log('--- CONTENT SEEDING COMPLETE ---');
 
-    // 8. Create Video Progress Table
+    // 8. Create Enrollments Table
+    console.log('Creating enrollments table...');
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS enrollments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        subject_id INT NOT NULL,
+        enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+        UNIQUE KEY user_subject (user_id, subject_id)
+      )
+    `);
+
+    // 9. Create Video Progress Table
     console.log('Creating video_progress table...');
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS video_progress (

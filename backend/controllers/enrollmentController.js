@@ -3,6 +3,10 @@ const EnrollmentModel = require('../models/enrollmentModel');
 const getMyEnrollments = async (req, res) => {
   try {
     const enrollments = await EnrollmentModel.getByUser(req.user.id);
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
     res.json(enrollments);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

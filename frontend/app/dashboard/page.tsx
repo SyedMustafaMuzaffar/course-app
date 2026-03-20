@@ -14,7 +14,7 @@ export default function StudentDashboard() {
   useEffect(() => {
     const fetchEnrollments = async () => {
       try {
-        const { data } = await api.get('/enrollments/my');
+        const { data } = await api.get(`/enrollments/my?t=${Date.now()}`);
         setEnrollments(data);
       } catch (error) {
         console.error('Failed to load enrollments:', error);
