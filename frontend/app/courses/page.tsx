@@ -391,7 +391,22 @@ export default function CourseCatalog() {
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-xl font-bold text-slate-700">No courses found</h3>
               <p className="text-slate-500 mt-2">Try adjusting your search or filter</p>
-              <button onClick={() => { setSearch(''); setFilterLevel('All'); }} className="mt-4 text-indigo-600 hover:underline text-sm font-medium">Clear filters</button>
+              
+              <div className="mt-8 flex flex-col items-center gap-4">
+                <button onClick={() => { setSearch(''); setFilterLevel('All'); }} className="text-indigo-600 hover:underline text-sm font-medium">Clear filters</button>
+                
+                <div className="p-6 bg-amber-50 rounded-2xl border border-amber-200 max-w-md">
+                  <p className="text-amber-800 text-sm mb-4 font-medium">If you just deployed and see 0 courses, click below to initialize the catalog:</p>
+                  <a 
+                    href="/api/health?init=true" 
+                    target="_blank"
+                    className="inline-block px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-amber-200"
+                  >
+                    🚀 Fix & Initialize Catalog
+                  </a>
+                  <p className="text-amber-600 text-[10px] mt-3 font-semibold uppercase tracking-wider">Wait 30 seconds after clicking, then refresh this page</p>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
