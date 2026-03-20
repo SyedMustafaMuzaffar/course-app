@@ -3,7 +3,7 @@ const pool = require('../config/db');
 class EnrollmentModel {
   static async getByUser(userId) {
     const [rows] = await pool.execute(
-      `SELECT e.id, e.user_id, e.subject_id, e.enrolled_at, s.title as subject_title, s.thumbnail as thumbnail_url 
+      `SELECT e.id, e.user_id, e.subject_id, e.enrolled_at, s.title as subject_title, s.thumbnail_url 
        FROM enrollments e 
        JOIN subjects s ON e.subject_id = s.id 
        WHERE e.user_id = ?`,
