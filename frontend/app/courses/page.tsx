@@ -278,6 +278,7 @@ export default function CourseCatalog() {
   const [search, setSearch] = useState('');
   const [filterLevel, setFilterLevel] = useState('All');
 
+  useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       
