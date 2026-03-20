@@ -28,12 +28,10 @@ const initDb = async () => {
       )
     `);
     
-    // 3. Create Subjects (FORCE RESET to match frontend Subject type)
-    console.log('Resetting subjects table to match frontend types...');
-    await pool.execute('SET FOREIGN_KEY_CHECKS = 0');
-    await pool.execute('DROP TABLE IF EXISTS subjects');
+    // 3. Create Subjects
+    console.log('Ensuring subjects table exists...');
     await pool.execute(`
-      CREATE TABLE subjects (
+      CREATE TABLE IF NOT EXISTS subjects (
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
         description TEXT,
@@ -46,7 +44,6 @@ const initDb = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    await pool.execute('SET FOREIGN_KEY_CHECKS = 1');
 
     console.log('--- DATABASE SCHEMA UPDATED ---');
 
