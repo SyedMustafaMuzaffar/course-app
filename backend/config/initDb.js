@@ -41,6 +41,20 @@ const initDb = async () => {
     `);
 
     console.log('--- DATABASE INITIALIZATION SUCCESSFUL ---');
+
+    // 4. Seed Default Data if empty
+    const [countResults] = await pool.execute('SELECT COUNT(*) as count FROM subjects');
+    if (countResults[0].count === 0) {
+      console.log('Seeding default courses...');
+      await pool.execute(`
+        INSERT INTO subjects (title, description, thumbnail) VALUES 
+        ('Python for Data Science', 'Master Python for data analysis, visualization, and machine learning with hands-on projects.', 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&q=80'),
+        ('Full Stack Web Development', 'Build modern web applications using React, Node.js, and MySQL.', 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80'),
+        ('AI & Machine Learning', 'Enter the world of Artificial Intelligence with neural networks and deep learning.', 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80')
+      `);
+      console.log('Default courses seeded.');
+    }
+
     return true;
   } catch (err) {
     console.error('--- DATABASE INITIALIZATION FAILED ---');
