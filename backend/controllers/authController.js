@@ -18,9 +18,9 @@ const register = async (req, res) => {
       existingUser = await UserModel.findByEmail(email);
     } catch (dbError) {
       // SELF-HEALING: If table doesn't exist, try to initialize it once
-      if (dbError.message.includes("doesn't exist")) {
+      if (dbError.message && dbError.message.includes("doesn't exist")) {
         console.log('Detected missing tables during registration. Initializing...');
-        const { initDb } = require('../server');
+        const initDb = require('../config/initDb');
         await initDb();
         // Retry once after initialization
         existingUser = await UserModel.findByEmail(email);
