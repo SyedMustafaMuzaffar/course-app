@@ -74,7 +74,7 @@ const initDb = async () => {
       ['Ethical Hacking', 'Learn to think like a hacker and defend your infrastructure.', 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&q=80', 11999, 95, 'Advanced', 600, 4.9],
       ['Blockchain Foundations', 'Build decentralized applications and understand crypto.', 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80', 14999, 60, 'Advanced', 400, 4.7],
       ['Game Dev with Unity', 'Create immersive 3D games with C# and the Unity engine.', 'https://images.unsplash.com/photo-1556438158-8d8116aece14?w=800&q=80', 5499, 85, 'Intermediate', 1300, 4.8],
-      ['Digital Marketing Strategy', 'Master SEO, social media, and Google Ads for growth.', 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80', 2499, 25, 'Beginner', 3200, 4.5)
+      ['Digital Marketing Strategy', 'Master SEO, social media, and Google Ads for growth.', 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80', 2499, 25, 'Beginner', 3200, 4.5]
     ];
 
     for (const c of courses) {
