@@ -32,16 +32,23 @@ app.get('/api/health', async (req, res) => {
 
     const [dbResult] = await pool.execute('SELECT DATABASE() as db');
     const [tables] = await pool.execute('SHOW TABLES');
+    const tableList = tables.map(t => Object.values(t)[0]);
     const [subjectsCols] = await pool.execute('DESCRIBE subjects').catch(() => [[]]);
     const [subjectsCount] = await pool.execute('SELECT COUNT(*) as count FROM subjects').catch(() => [[{count: 0}]]);
     
+    let enrollmentsCount = 0;
+    if (tableList.includes('enrollments')) {
+        const [enCount] = await pool.execute('SELECT COUNT(*) as count FROM enrollments');
+        enrollmentsCount = enCount[0].count;
+    }
+
     res.json({
       status: 'healthy',
       database_name: dbResult[0]?.db || 'unknown',
-      tables: tables.map(t => Object.values(t)[0]),
+      tables: tableList,
       subjects_exists: subjectsCols.length > 0,
-      subjects_schema: subjectsCols.map(c => ({ name: c.Field, type: c.Type })),
       subjects_count: subjectsCount[0].count,
+      enrollments_count: enrollmentsCount,
       time: new Date().toISOString()
     });
   } catch (error) {
