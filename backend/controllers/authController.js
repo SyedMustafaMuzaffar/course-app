@@ -13,7 +13,22 @@ const register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
     
-    const existingUser = await UserModel.findByEmail(email);
+    let existingUser;
+    try {
+      existingUser = await UserModel.findByEmail(email);
+    } catch (dbError) {
+      // SELF-HEALING: If table doesn't exist, try to initialize it once
+      if (dbError.message.includes("doesn't exist")) {
+        console.log('Detected missing tables during registration. Initializing...');
+        const { initDb } = require('../server');
+        await initDb();
+        // Retry once after initialization
+        existingUser = await UserModel.findByEmail(email);
+      } else {
+        throw dbError; // Rethrow if it's a different DB error
+      }
+    }
+
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
@@ -23,6 +38,7 @@ const register = async (req, res) => {
 
     res.status(201).json({ message: 'User registered successfully', userId });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
