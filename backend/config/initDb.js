@@ -88,6 +88,61 @@ const initDb = async () => {
     }
     
     console.log('--- DATABASE SEEDING SUCCESSFUL ---');
+
+    // 5. Create Sections Table
+    console.log('Creating sections table...');
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS sections (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        subject_id INT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        order_index INT DEFAULT 0,
+        FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
+      )
+    `);
+
+    // 6. Create Videos Table
+    console.log('Creating videos table...');
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS videos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        section_id INT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        youtube_url VARCHAR(255) NOT NULL,
+        duration INT DEFAULT 0,
+        order_index INT DEFAULT 0,
+        FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE
+      )
+    `);
+
+    // 7. Seed Content for ANY Subject that has 0 sections
+    const [allSubs] = await pool.execute('SELECT id, title FROM subjects');
+    console.log(`Checking content for ${allSubs.length} subjects...`);
+
+    for (const sub of allSubs) {
+      const [existingSections] = await pool.execute('SELECT id FROM sections WHERE subject_id = ?', [sub.id]);
+      
+      if (existingSections.length === 0) {
+        console.log(`Seeding content for: ${sub.title}`);
+        
+        // Add 2 Sections
+        const [sec1] = await pool.execute('INSERT INTO sections (subject_id, title, order_index) VALUES (?, "Introduction & Basics", 1)', [sub.id]);
+        const [sec2] = await pool.execute('INSERT INTO sections (subject_id, title, order_index) VALUES (?, "Intermediate Concepts", 2)', [sub.id]);
+        
+        const s1Id = sec1.insertId;
+        const s2Id = sec2.insertId;
+
+        // Add Videos to Section 1
+        await pool.execute('INSERT INTO videos (section_id, title, youtube_url, duration, order_index) VALUES (?, "Course Overview", "https://www.youtube.com/watch?v=rfscVS0vtbw", 300, 1)', [s1Id]);
+        await pool.execute('INSERT INTO videos (section_id, title, youtube_url, duration, order_index) VALUES (?, "Getting Started", "https://www.youtube.com/watch?v=kqtD5dpn9C8", 600, 2)', [s1Id]);
+
+        // Add Videos to Section 2
+        await pool.execute('INSERT INTO videos (section_id, title, youtube_url, duration, order_index) VALUES (?, "Main Principles", "https://www.youtube.com/watch?v=Z5iWr6SFEj8", 900, 1)', [s2Id]);
+        await pool.execute('INSERT INTO videos (section_id, title, youtube_url, duration, order_index) VALUES (?, "Advanced Project", "https://www.youtube.com/watch?v=0ZJgJwR427Y", 1200, 2)', [s2Id]);
+      }
+    }
+
+    console.log('--- CONTENT SEEDING COMPLETE ---');
     return true;
   } catch (err) {
     console.error('--- DATABASE INITIALIZATION FAILED ---');
