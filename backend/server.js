@@ -49,8 +49,10 @@ app.get('/api/health', async (req, res) => {
 // Auto-initialize tables (Crucial for 100% working app on Vercel)
 const initDb = async () => {
   const pool = require('./config/db');
-  console.log('Checking database tables...');
+  console.log('--- STARTING DATABASE INITIALIZATION ---');
   try {
+    // 1. Create Users Table First (Essential for foreign keys)
+    console.log('Creating users table...');
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -62,6 +64,8 @@ const initDb = async () => {
       )
     `);
     
+    // 2. Create Refresh Tokens (Depends on users)
+    console.log('Creating refresh_tokens table...');
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS refresh_tokens (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -71,8 +75,9 @@ const initDb = async () => {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
-
-    // Add subjects table for dashboard
+    
+    // 3. Create Subjects
+    console.log('Creating subjects table...');
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS subjects (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -83,9 +88,12 @@ const initDb = async () => {
       )
     `);
 
-    console.log('Database tables verified/created.');
+    console.log('--- DATABASE INITIALIZATION SUCCESSFUL ---');
+    return true;
   } catch (err) {
-    console.error('Auto-init failed:', err.message);
+    console.error('--- DATABASE INITIALIZATION FAILED ---');
+    console.error('Error Details:', err.message);
+    return false;
   }
 };
 
