@@ -18,12 +18,12 @@ if (dbUrl) {
       minVersion: 'TLSv1.2'
     },
     waitForConnections: true,
-    connectionLimit: 5,
+    connectionLimit: 2, // Very low for Free Tier
     queueLimit: 0,
-    connectTimeout: 60000, // 60 seconds
+    connectTimeout: 90000, // 90 seconds (Ultra-long for cross-continental)
     enableKeepAlive: true,
     keepAliveInitialDelay: 10000,
-    family: 4 // Force IPv4
+    family: 4
   });
 } else {
   const poolConfig = {
