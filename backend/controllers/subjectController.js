@@ -15,6 +15,11 @@ const getAllSubjects = async (req, res) => {
       subjects = await SubjectModel.getAll();
     }
     
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    
     res.json(subjects);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

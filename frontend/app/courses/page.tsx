@@ -282,8 +282,8 @@ export default function CourseCatalog() {
     const fetchData = async () => {
       try {
         const [{ data: allSubjects }, { data: myEnrollments }] = await Promise.all([
-          api.get('/subjects'),
-          api.get('/enrollments/my'),
+          api.get(`/subjects?t=${Date.now()}`),
+          api.get(`/enrollments/my?t=${Date.now()}`),
         ]);
         setSubjects(allSubjects);
         const map: Record<number, boolean> = {};
