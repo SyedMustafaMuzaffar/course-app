@@ -27,16 +27,16 @@ function PaymentModal({
   const [wallet, setWallet] = useState('paytm');
   const [step, setStep] = useState<'pay' | 'success'>('pay');
 
-  const handlePay = async () => {
-    setProcessing(true);
-    // Simulate payment processing
-    await new Promise((r) => setTimeout(r, 1800));
     try {
-      await api.post('/enrollments/enroll', { subject_id: subject.id });
-    } catch {}
-    setProcessing(false);
-    setStep('success');
-  };
+      const response = await api.post('/enrollments/enroll', { subject_id: subject.id });
+      console.log('Enrollment response:', response.data);
+      setProcessing(false);
+      setStep('success');
+    } catch (err: any) {
+      console.error('Enrollment failed:', err?.response?.data || err.message);
+      setProcessing(false);
+      alert('Enrollment failed: ' + (err?.response?.data?.message || 'Please log out and log in again to sync your account.'));
+    }
 
   const methodTab = (id: typeof method, label: string, icon: string) => (
     <button
