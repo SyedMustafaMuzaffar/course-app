@@ -9,11 +9,20 @@ import { PlayCircle, CheckCircle2, Lock, Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { memo } from 'react';
 
+const getEmbedUrl = (url: string) => {
+  if (url.includes('youtube.com/embed/')) return url;
+  const idMatch = url.match(/[?&]v=([^&#]+)/);
+  if (idMatch) return `https://www.youtube.com/embed/${idMatch[1]}`;
+  const shortMatch = url.match(/youtu\.be\/([^&#]+)/);
+  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
+  return url;
+};
+
 const VideoPlayer = memo(({ url, startTime }: { url: string; startTime: number }) => (
   <iframe
     width="100%"
     height="100%"
-    src={`${url}?start=${startTime}&autoplay=1`}
+    src={`${getEmbedUrl(url)}?start=${startTime}&autoplay=1`}
     title="Video Player"
     frameBorder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -43,48 +52,41 @@ export default function VideoLearningInterface() {
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
-        // Verify enrollment
+        // 1. Verify enrollment
         const { data: { isEnrolled } } = await api.get(`/enrollments/check/${courseId}`);
         if (!isEnrolled) {
           router.push('/courses');
           return;
         }
 
-        // Fetch subject
-        const { data: sub } = await api.get(`/subjects/${courseId}`);
+        // 2. Fetch subject with hierarchical content (sections + videos)
+        const { data: sub } = await api.get(`/subjects/${courseId}?t=${Date.now()}`);
         setSubject(sub);
-
-        // Fetch sections
-        const { data: sects } = await api.get(`/sections/subject/${courseId}`);
-        setSections(sects);
-
-        // Fetch videos and progress
-        const vMap: Record<number, Video[]> = {};
-        let firstVid: Video | null = null;
         
-        for (const sect of sects) {
-          const { data: vids } = await api.get(`/videos/section/${sect.id}`);
-          vMap[sect.id] = vids;
-          if (!firstVid && vids.length > 0) {
-            firstVid = vids[0];
-          }
+        if (sub.sections) {
+          setSections(sub.sections);
+          const vMap: Record<number, Video[]> = {};
+          let firstVid: Video | null = null;
+          
+          sub.sections.forEach((sect: any) => {
+            vMap[sect.id] = sect.videos || [];
+            if (!firstVid && sect.videos?.length > 0) {
+              firstVid = sect.videos[0];
+            }
+          });
+          setVideosMap(vMap);
+          if (firstVid) setActiveVideo(firstVid);
         }
-        setVideosMap(vMap);
 
-        const { data: progList } = await api.get(`/progress/subject/${courseId}`);
+        // 3. Fetch progress
+        const { data: progList } = await api.get(`/progress/subject/${courseId}?t=${Date.now()}`);
         const pMap: Record<number, boolean> = {};
-        progList.forEach((p: any) => {
-          pMap[p.video_id] = p.completed;
-        });
-        setProgressMap(pMap);
-        if (firstVid) {
-          setActiveVideo(firstVid);
-          // fetch individual progress to get watch time
-          const { data: vp } = await api.get(`/progress/video/${firstVid.id}`);
-          const time = vp?.watched_seconds || 0;
-          setWatchTime(time);
-          setInitialStartTime(time);
+        if (Array.isArray(progList)) {
+          progList.forEach((p: any) => {
+            pMap[p.video_id] = p.completed;
+          });
         }
+        setProgressMap(pMap);
 
       } catch (error) {
         console.error('Failed to load course:', error);
@@ -97,16 +99,29 @@ export default function VideoLearningInterface() {
     }
   }, [courseId, router]);
 
+  // Handle active video progress load
+  useEffect(() => {
+    if (activeVideo) {
+      api.get(`/progress/video/${activeVideo.id}`).then(({ data: vp }) => {
+        const time = vp?.watched_seconds || 0;
+        setWatchTime(time);
+        setInitialStartTime(time);
+      }).catch(() => {
+        setWatchTime(0);
+        setInitialStartTime(0);
+      });
+    }
+  }, [activeVideo]);
+
   // Simulate video watching progress
   useEffect(() => {
     if (!activeVideo || progressMap[activeVideo.id]) return;
 
     const interval = setInterval(() => {
       setWatchTime(prev => {
-        const next = prev + 5; // 5 seconds interval
-        
-        // Auto mark as complete if watched > 90%
-        const isCompleted = next >= (activeVideo.duration * 0.9);
+        const next = prev + 5;
+        const duration = activeVideo.duration || 600; // fallback 10m
+        const isCompleted = next >= (duration * 0.9);
         
         if (isCompleted && !progressMap[activeVideo.id]) {
             api.post('/progress/update', {
@@ -116,11 +131,8 @@ export default function VideoLearningInterface() {
             }).then(() => {
                 setProgressMap(curr => ({ ...curr, [activeVideo.id]: true }));
             });
-        }
-        
-        // Saving progress every 5s independently
-        if (!isCompleted) {
-             api.post('/progress/update', {
+        } else if (!isCompleted) {
+            api.post('/progress/update', {
                 video_id: activeVideo.id,
                 watched_seconds: next,
                 completed: false
