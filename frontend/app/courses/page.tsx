@@ -278,22 +278,31 @@ export default function CourseCatalog() {
   const [search, setSearch] = useState('');
   const [filterLevel, setFilterLevel] = useState('All');
 
-  useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      
+      // Fetch Subjects
       try {
-        const [{ data: allSubjects }, { data: myEnrollments }] = await Promise.all([
-          api.get(`/subjects?t=${Date.now()}`),
-          api.get(`/enrollments/my?t=${Date.now()}`),
-        ]);
-        setSubjects(allSubjects);
-        const map: Record<number, boolean> = {};
-        myEnrollments.forEach((e: any) => { map[e.subject_id] = true; });
-        setEnrolledMap(map);
+        const { data } = await api.get(`/subjects?t=${Date.now()}`);
+        console.log('API DEB: Subjects received:', data?.length);
+        setSubjects(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to load courses:', error);
-      } finally {
-        setLoading(false);
       }
+
+      // Fetch Enrollments (separately)
+      try {
+        const { data: myEnrollments } = await api.get(`/enrollments/my?t=${Date.now()}`);
+        if (Array.isArray(myEnrollments)) {
+          const map: Record<number, boolean> = {};
+          myEnrollments.forEach((e: any) => { map[e.subject_id] = true; });
+          setEnrolledMap(map);
+        }
+      } catch (error) {
+        console.error('Failed to load my enrollments:', error);
+      }
+      
+      setLoading(false);
     };
     fetchData();
   }, []);
