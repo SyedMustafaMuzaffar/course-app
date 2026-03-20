@@ -44,7 +44,7 @@ const initDb = async () => {
 
     // 4. Seed Default Data if empty
     const [countResults] = await pool.execute('SELECT COUNT(*) as count FROM subjects');
-    if (countResults[0].count === 0) {
+    if (countResults[0].count < 10) {
       console.log('Seeding 15 default courses...');
       await pool.execute(`
         INSERT INTO subjects (title, description, thumbnail) VALUES 
