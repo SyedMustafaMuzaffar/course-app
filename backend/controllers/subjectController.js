@@ -8,7 +8,10 @@ const getAllSubjects = async (req, res) => {
     if (subjects.length === 0) {
       console.log('No subjects found. Running blocking initialization...');
       const initDb = require('../config/initDb');
-      await initDb();
+      const success = await initDb();
+      if (!success) {
+        return res.status(500).json({ message: 'Database initialization failed. Check server logs.' });
+      }
       subjects = await SubjectModel.getAll();
     }
     

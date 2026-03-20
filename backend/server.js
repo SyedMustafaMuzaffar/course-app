@@ -27,22 +27,24 @@ app.get('/api/health', async (req, res) => {
     
     // Check if user wants to force initialize tables
     if (req.query.init === 'true') {
-      await initDb();
-    }
-
-    const [rows] = await pool.execute('SELECT 1 as connected');
-    
-    // Check if tables exist
     const [tables] = await pool.execute('SHOW TABLES');
-    res.json({ 
-      status: 'ok', 
-      database: 'connected', 
-      tables_count: tables.length,
-      init_url: '/api/health?init=true',
-      details: rows[0].connected === 1 ? 'ready' : 'error' 
+    const [subjectsCols] = await pool.execute('DESCRIBE subjects').catch(() => [[]]);
+    const [subjectsCount] = await pool.execute('SELECT COUNT(*) as count FROM subjects').catch(() => [[{count: 0}]]);
+    
+    res.json({
+      status: 'healthy',
+      database: 'connected',
+      tables: tables.map(t => Object.values(t)[0]),
+      subjects_schema: subjectsCols.map(c => ({ name: c.Field, type: c.Type })),
+      subjects_count: subjectsCount[0].count,
+      time: new Date().toISOString()
     });
-  } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'unhealthy', 
+      error: error.message,
+      stack: error.stack
+    });
   }
 });
 
