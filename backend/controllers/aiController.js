@@ -22,44 +22,45 @@ const chat = async (req, res) => {
       return res.json({ response: getMockResponse(message) });
     }
 
-    const response = await fetch(
+    const axios = require('axios');
+    const response = await axios.post(
       "https://router.huggingface.co/v1/chat/completions",
+      {
+        model: "Qwen/Qwen2.5-7B-Instruct",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful AI assistant for an LMS (Learning Management System). Keep your responses concise and helpful for students."
+          },
+          {
+            role: "user",
+            content: message
+          }
+        ],
+        max_tokens: 500
+      },
       {
         headers: { 
           "Authorization": `Bearer ${hfToken}`, 
           "Content-Type": "application/json" 
         },
-        method: "POST",
-        body: JSON.stringify({
-          model: "Qwen/Qwen2.5-7B-Instruct",
-          messages: [
-            {
-              role: "system",
-              content: "You are a helpful AI assistant for an LMS (Learning Management System). Keep your responses concise and helpful for students."
-            },
-            {
-              role: "user",
-              content: message
-            }
-          ],
-          max_tokens: 500
-        }),
+        timeout: 10000 // 10 second timeout
       }
     );
 
-    const result = await response.json();
-    
-    if (result.error) {
-      console.error("HF API Error Response:", result);
-      throw new Error(result.error.message || result.error);
-    }
-
+    const result = response.data;
     const aiResponse = result.choices?.[0]?.message?.content || getMockResponse(message);
     res.json({ response: aiResponse.trim() });
 
   } catch (error) {
-    console.error("AI Error:", error);
-    res.json({ response: getMockResponse(message, error.message) });
+    console.error("AI Error Details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+    });
+    
+    const detailedError = error.response?.data?.error?.message || error.message;
+    res.json({ response: getMockResponse(message, detailedError) });
   }
 };
 

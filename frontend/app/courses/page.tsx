@@ -34,14 +34,16 @@ function PaymentModal({
     // Simulate payment processing
     await new Promise((r) => setTimeout(r, 1800));
     try {
-      const response = await api.post('/enrollments/enroll', { subject_id: subject.id });
+      // 15 second timeout to prevent infinite loading
+      const response = await api.post('/enrollments/enroll', { subject_id: subject.id }, { timeout: 15000 });
       console.log('Enrollment response:', response.data);
       setProcessing(false);
       setStep('success');
     } catch (err: any) {
       console.error('Enrollment failed:', err?.response?.data || err.message);
       setProcessing(false);
-      alert('Enrollment failed: ' + (err?.response?.data?.message || 'Please log out and log in again to sync your account.'));
+      const isTimeout = err.code === 'ECONNABORTED' || err.message.includes('timeout');
+      alert('Enrollment Status: ' + (isTimeout ? 'The server is taking too long to respond. Please check "My Learning" in a moment or try again.' : (err?.response?.data?.message || 'Please log out and log in again to sync your account.')));
     }
   };
 
