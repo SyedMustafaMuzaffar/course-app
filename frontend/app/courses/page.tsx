@@ -5,6 +5,8 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/axios';
 import { Subject } from '@/types';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // ─── Payment Modal ────────────────────────────────────────────────────────────
 function PaymentModal({
@@ -319,9 +321,12 @@ export default function CourseCatalog() {
     return matchSearch && matchLevel;
   });
 
+  const router = useRouter();
+
   const handleEnrollSuccess = (subjectId: number) => {
     setEnrolledMap((prev) => ({ ...prev, [subjectId]: true }));
     setPaySubject(null);
+    router.push(`/learn/${subjectId}`);
   };
 
   return (
@@ -486,9 +491,12 @@ export default function CourseCatalog() {
                       </div>
 
                       {enrolledMap[subject.id] ? (
-                        <div className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 border-2 border-green-400 text-green-600 rounded-xl text-sm font-semibold">
-                          ✓ Already Enrolled
-                        </div>
+                        <Link
+                          href={`/learn/${subject.id}`}
+                          className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-emerald-200"
+                        >
+                          🚀 Start Learning Now
+                        </Link>
                       ) : (
                         <button
                           onClick={() => setPaySubject(subject)}

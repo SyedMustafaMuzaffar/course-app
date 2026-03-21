@@ -22,7 +22,7 @@ const VideoPlayer = memo(({ url, startTime }: { url: string; startTime: number }
   <iframe
     width="100%"
     height="100%"
-    src={`${getEmbedUrl(url)}?start=${startTime}&autoplay=1`}
+    src={`${getEmbedUrl(url)}?start=${startTime}&autoplay=1&modestbranding=1&rel=0&showinfo=0`}
     title="Video Player"
     frameBorder="0"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -220,6 +220,48 @@ export default function VideoLearningInterface() {
                   Select a video from the sidebar to start learning
                 </div>
               )}
+
+              {/* Mobile Lesson List (Visible only on small screens) */}
+              <div className="lg:hidden mt-8 border-t border-slate-200 pt-6">
+                <h2 className="font-bold text-slate-900 mb-4">Course Content</h2>
+                <div className="space-y-4">
+                  {sections.map(section => (
+                    <div key={section.id} className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+                      <div className="bg-slate-100 px-4 py-3 border-b border-slate-200">
+                        <h3 className="font-semibold text-slate-800 text-sm">{section.title}</h3>
+                      </div>
+                      <div className="divide-y divide-slate-100">
+                        {(videosMap[section.id] || []).map(video => {
+                          const isCompleted = progressMap[video.id];
+                          const isActive = activeVideo?.id === video.id;
+                          return (
+                            <button
+                              key={video.id}
+                              onClick={() => selectVideo(video, false)}
+                              className={`w-full flex items-center p-3 text-left transition-colors
+                                ${isActive ? 'bg-indigo-50 border-l-4 border-indigo-600' : 'hover:bg-slate-50 border-l-4 border-transparent'}
+                              `}
+                            >
+                              <div className="flex-shrink-0 mr-3">
+                                {isCompleted ? (
+                                  <CheckCircle2 size={18} className="text-green-500" />
+                                ) : (
+                                  <PlayCircle size={18} className={isActive ? 'text-indigo-600' : 'text-slate-400'} />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-medium truncate ${isActive ? 'text-indigo-900' : 'text-slate-700'}`}>
+                                  {video.title}
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </main>
 
