@@ -49,7 +49,10 @@ const chat = async (req, res) => {
     );
 
     const result = response.data;
-    const aiResponse = result.choices?.[0]?.message?.content || getMockResponse(message);
+    if (!result.choices || !result.choices[0]?.message?.content) {
+        throw new Error('API returned successfully but without text results. Status: ' + response.status);
+    }
+    const aiResponse = result.choices[0].message.content;
     res.json({ response: aiResponse.trim() });
 
   } catch (error) {
