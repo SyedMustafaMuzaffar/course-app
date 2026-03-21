@@ -21,6 +21,34 @@ app.get('/', (req, res) => {
 });
 
 // Health check and One-Click DB Init
+// Diagnostics Route
+app.get('/api/diag', async (req, res) => {
+  const pool = require('./config/db');
+  const start = Date.now();
+  try {
+    const [rows] = await pool.execute('SELECT 1 as connected');
+    const latency = Date.now() - start;
+    res.json({ 
+      status: 'success', 
+      database: 'connected', 
+      latency_ms: latency,
+      message: 'Everything is healthy!',
+      env: {
+        has_db_url: !!process.env.DATABASE_URL,
+        has_gemini: !!process.env.GEMINI_API_KEY,
+        node_env: process.env.NODE_ENV
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      status: 'error', 
+      database: 'disconnected', 
+      error: err.message,
+      code: err.code
+    });
+  }
+});
+
 app.get('/api/health', async (req, res) => {
   try {
     const pool = require('./config/db');
