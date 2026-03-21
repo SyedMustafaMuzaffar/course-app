@@ -4,16 +4,16 @@ const chat = async (req, res) => {
   const { message, history } = req.body;
   const hfToken = process.env.HUGGINGFACE_API_KEY;
 
-  const getMockResponse = (msg) => {
+  const getMockResponse = (msg, error = null) => {
     const lower = msg.toLowerCase();
     if (lower.includes("hello") || lower.includes("hi")) {
-      return "Hello! I'm your AI assistant. Currently, I'm running in 'Lite Mode' because there's an issue with the AI configuration. How can I help you with your learning today?";
+      return "Hello! I'm your AI assistant. Currently, I'm running in 'Lite Mode', but I can still help you with basic questions!";
     } else if (lower.includes("price") || lower.includes("cost")) {
       return "Our courses are very affordable, starting from ₹2,499. Check the 'Course Catalog' for details!";
     } else if (lower.includes("java")) {
       return "Java is a great choice! We have professional Java courses. Is there something specific you'd like to know about Java?";
     } else {
-      return "I'm currently in 'Lite Mode' due to an AI configuration issue. Once the API Key is fixed, I can provide full dynamic support. For now, I can answer basic questions about our LMS!";
+      return `I'm currently in 'Lite Mode' because I encountered a problem connecting to my dynamic brain. ${error ? `(Error: ${error})` : 'For now, I can answer basic questions about our LMS!'}`;
     }
   };
 
@@ -22,7 +22,6 @@ const chat = async (req, res) => {
       return res.json({ response: getMockResponse(message) });
     }
 
-    // Using Hugging Face OpenAI-compatible router
     const response = await fetch(
       "https://router.huggingface.co/v1/chat/completions",
       {
@@ -60,8 +59,7 @@ const chat = async (req, res) => {
 
   } catch (error) {
     console.error("AI Error:", error);
-    // Fallback to mock on any real API error
-    res.json({ response: getMockResponse(message) });
+    res.json({ response: getMockResponse(message, error.message) });
   }
 };
 

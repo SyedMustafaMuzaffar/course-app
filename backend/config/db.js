@@ -18,7 +18,7 @@ if (dbUrl) {
       minVersion: 'TLSv1.2'
     },
     waitForConnections: true,
-    connectionLimit: 2, // Very low for Free Tier
+    connectionLimit: 10, // Increased from 2 for better reliability
     queueLimit: 0,
     connectTimeout: 90000, // 90 seconds (Ultra-long for cross-continental)
     enableKeepAlive: true,
