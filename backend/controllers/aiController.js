@@ -6,14 +6,16 @@ const chat = async (req, res) => {
 
   const getMockResponse = (msg, error = null) => {
     const lower = msg.toLowerCase();
+    const errorInfo = error ? ` [ERROR: ${error}]` : ' [Missing GEMINI_API_KEY]';
+    
     if (lower.includes("hello") || lower.includes("hi")) {
-      return "Hello! I'm your AI assistant. Currently, I'm running in 'Lite Mode', but I can still help you with basic questions!";
+      return `Hello! I'm your AI assistant. Currently, I'm running in 'Lite Mode' due to a configuration issue.${errorInfo} How can I help you today?`;
     } else if (lower.includes("price") || lower.includes("cost")) {
-      return "Our courses are very affordable, starting from ₹2,499. Check the 'Course Catalog' for details!";
+      return `Our courses are very affordable, starting from ₹2,499. Check the 'Course Catalog' for details!${errorInfo}`;
     } else if (lower.includes("java")) {
-      return "Java is a great choice! We have professional Java courses. Is there something specific you'd like to know about Java?";
+      return `Java is a great choice! We have professional Java courses. Is there something specific you'd like to know about Java?${errorInfo}`;
     } else {
-      return `I'm currently in 'Lite Mode' because I encountered a problem connecting to my dynamic brain. ${error ? `(Error: ${error})` : 'For now, I can answer basic questions about our LMS!'}`;
+      return `I'm currently in 'Lite Mode' because I encountered a problem connecting to my brain.${errorInfo} For now, I can answer basic questions!`;
     }
   };
 
