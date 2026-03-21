@@ -18,52 +18,32 @@ const chat = async (req, res) => {
   };
 
   try {
-    if (!hfToken || hfToken === 'your_huggingface_api_key_here') {
-      return res.json({ response: getMockResponse(message) });
+    const { GoogleGenerativeAI } = require("@google/generative-ai");
+    const apiKey = process.env.GEMINI_API_KEY || process.env.HUGGINGFACE_API_KEY; // Fallback to either
+
+    if (!apiKey || apiKey.length < 20) {
+      return res.json({ response: getMockResponse(message, "Missing valid API Key (GEMINI_API_KEY)") });
     }
 
-    const axios = require('axios');
-    const response = await axios.post(
-      "https://router.huggingface.co/v1/chat/completions",
-      {
-        model: "Qwen/Qwen2.5-7B-Instruct",
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful AI assistant for an LMS (Learning Management System). Keep your responses concise and helpful for students."
-          },
-          {
-            role: "user",
-            content: message
-          }
-        ],
-        max_tokens: 500
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const chatSession = model.startChat({
+      history: history || [],
+      generationConfig: {
+        maxOutputTokens: 500,
       },
-      {
-        headers: { 
-          "Authorization": `Bearer ${hfToken}`, 
-          "Content-Type": "application/json" 
-        },
-        timeout: 10000 // 10 second timeout
-      }
-    );
+    });
 
-    const result = response.data;
-    if (!result.choices || !result.choices[0]?.message?.content) {
-        throw new Error('API returned successfully but without text results. Status: ' + response.status);
-    }
-    const aiResponse = result.choices[0].message.content;
+    const prompt = `You are a helpful AI assistant for Kodnest LMS. The student says: ${message}. Keep it concise.`;
+    const result = await chatSession.sendMessage(prompt);
+    const aiResponse = result.response.text();
+    
     res.json({ response: aiResponse.trim() });
 
   } catch (error) {
-    console.error("AI Error Details:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-    });
-    
-    const detailedError = error.response?.data?.error?.message || error.message;
-    res.json({ response: getMockResponse(message, detailedError) });
+    console.error("AI Gemini Error:", error);
+    res.json({ response: getMockResponse(message, error.message) });
   }
 };
 
