@@ -27,23 +27,40 @@ const chat = async (req, res) => {
     try {
       const { GoogleGenerativeAI } = require("@google/generative-ai");
       const genAI = new GoogleGenerativeAI(geminiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      // Try multiple model identifiers as some environments have different availability
+      const modelNames = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"];
+      let success = false;
+      let aiResponse = "";
 
-      const chatSession = model.startChat({
-        history: history || [],
-        generationConfig: { maxOutputTokens: 500 },
-      });
+      for (const modelName of modelNames) {
+        try {
+          const model = genAI.getGenerativeModel({ model: modelName });
+          const chatSession = model.startChat({
+            history: history || [],
+            generationConfig: { maxOutputTokens: 500 },
+          });
 
-      const prompt = `You are a helpful AI assistant for Kodnest LMS. The student says: ${message}. Keep it concise.`;
-      const result = await chatSession.sendMessage(prompt);
-      const aiResponse = result.response.text();
-      return res.json({ response: aiResponse.trim() });
+          const prompt = `You are a helpful AI assistant for Kodnest LMS. The student says: ${message}. Keep it concise.`;
+          const result = await chatSession.sendMessage(prompt);
+          aiResponse = result.response.text();
+          success = true;
+          break; // Found a working model
+        } catch (mErr) {
+          console.error(`Gemini Model ${modelName} failed:`, mErr.message);
+          lastError = `Gemini (${modelName}): ${mErr.message}`;
+        }
+      }
+
+      if (success) {
+        return res.json({ response: aiResponse.trim() });
+      }
     } catch (error) {
-      console.error("AI Gemini Error:", error.message);
-      lastError = `Gemini: ${error.message}`;
-      // Fall through to HuggingFace or Mock
+      console.error("AI Gemini initialization error:", error.message);
+      lastError = `Gemini Init: ${error.message}`;
     }
   }
+
 
   // 2. Try HuggingFace Fallback (If Gemini failed or key missing)
   if (hfToken && hfToken.startsWith('hf_')) {

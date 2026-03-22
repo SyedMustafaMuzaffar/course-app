@@ -18,9 +18,9 @@ if (dbUrl) {
       minVersion: 'TLSv1.2'
     },
     waitForConnections: true,
-    connectionLimit: 10, // Increased from 2 for better reliability
+    connectionLimit: 10,
     queueLimit: 0,
-    connectTimeout: 90000, // 90 seconds (Ultra-long for cross-continental)
+    connectTimeout: 5000, 
     enableKeepAlive: true,
     keepAliveInitialDelay: 10000,
     family: 4
@@ -38,7 +38,7 @@ if (dbUrl) {
       ssl: {
         rejectUnauthorized: false
       },
-      connectTimeout: 60000,
+      connectTimeout: 5000,
       family: 4 // Force IPv4
     };
   pool = mysql.createPool(poolConfig);
