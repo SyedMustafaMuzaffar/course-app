@@ -22,7 +22,9 @@ app.get('/', (req, res) => {
 
 // Health check and One-Click DB Init
 // Diagnostics Route
-app.get('/api/diag', async (req, res) => {
+// Diagnostics Route (Supports both /api/diag and /diag)
+app.get(['/api/diag', '/diag'], async (req, res) => {
+
   const pool = require('./config/db');
   const start = Date.now();
   try {
