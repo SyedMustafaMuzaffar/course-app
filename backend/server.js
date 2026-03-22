@@ -88,10 +88,13 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-const initDb = require('./config/initDb');
-
 // Run init in background (don't block server start)
-initDb();
+if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+  initDb().catch(err => console.error('Background DB Init Error:', err.message));
+} else {
+  initDb();
+}
+
 
 // Routes - flexible for both /api/ and direct paths (common for Vercel/proxying)
 app.use(['/api/auth', '/auth'], require('./routes/auth'));

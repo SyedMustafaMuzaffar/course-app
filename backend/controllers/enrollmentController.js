@@ -23,24 +23,42 @@ const checkUserEnrollment = async (req, res) => {
 };
 
 const enrollStudent = async (req, res) => {
+  let subject_id;
   try {
-    const { subject_id } = req.body;
+    ({ subject_id } = req.body);
     
+    // Add a quick DB connectivity check to avoid long hangs
+    const pool = require('../config/db');
+    try {
+      await Promise.race([
+        pool.query('SELECT 1'),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('DB_TIMEOUT')), 5000))
+      ]);
+    } catch (dbErr) {
+      console.error('Enrollment DB Check Failed:', dbErr.message);
+      return res.status(503).json({ 
+        message: 'The enrollment system is temporarily busy. Please try again in 30 seconds.',
+        error: 'DB_UNAVAILABLE' 
+      });
+    }
+
     // Check if already enrolled
-    const exists = await EnrollmentModel.checkEnrollment(req.user.id, subject_id);
+    const exists = await EnrollmentModel.checkEnrollment(req.user?.id, subject_id);
     if (exists) {
       return res.status(400).json({ message: 'Already enrolled in this subject' });
     }
 
-    const id = await EnrollmentModel.enroll(req.user.id, subject_id);
+    const id = await EnrollmentModel.enroll(req.user?.id, subject_id);
     res.status(201).json({ message: 'Enrolled successfully', id });
+
   } catch (error) {
     console.error('CRITICAL ENROLLMENT ERROR:', {
-      userId: req.user.id,
+      userId: req.user?.id,
       subjectId: subject_id,
       error: error.message,
       code: error.code
     });
+
 
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ message: 'Already enrolled' });

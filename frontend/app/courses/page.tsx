@@ -30,22 +30,35 @@ function PaymentModal({
   const [step, setStep] = useState<'pay' | 'success'>('pay');
 
   const handlePay = async () => {
+    if (processing) return;
     setProcessing(true);
+    
     // Simulate payment processing
     await new Promise((r) => setTimeout(r, 1800));
+    
     try {
-      // 15 second timeout to prevent infinite loading
-      const response = await api.post('/enrollments/enroll', { subject_id: subject.id }, { timeout: 15000 });
+      // 10 second timeout for the actual API call
+      const response = await api.post('/enrollments/enroll', { subject_id: subject.id }, { timeout: 10000 });
       console.log('Enrollment response:', response.data);
       setProcessing(false);
       setStep('success');
     } catch (err: any) {
       console.error('Enrollment failed:', err?.response?.data || err.message);
       setProcessing(false);
-      const isTimeout = err.code === 'ECONNABORTED' || err.message.includes('timeout');
-      alert('Enrollment Status: ' + (isTimeout ? 'The server is taking too long to respond. Please check "My Learning" in a moment or try again.' : (err?.response?.data?.message || 'Please log out and log in again to sync your account.')));
+      
+      const errorMsg = err?.response?.data?.message || err.message;
+      const isTimeout = err.code === 'ECONNABORTED' || err.message.includes('timeout') || err.message.includes('503') || err.message.includes('unavailable');
+      
+      if (isTimeout) {
+        alert('Server Busy: The system is taking a bit longer than usual. Please wait a moment and check your "My Learning" dashboard, or try again.');
+      } else {
+        alert(`Enrollment Error: ${errorMsg}. Please try refreshing the page or logging in again.`);
+      }
+    } finally {
+      setProcessing(false);
     }
   };
+
 
   const methodTab = (id: typeof method, label: string, icon: string) => (
     <button
